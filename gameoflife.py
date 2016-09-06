@@ -45,7 +45,7 @@ INITIAL_SETUPS = {
 }
 
 
-class Grid():
+class Grid(object):
     def __init__(self, width, height, coordinates):
         self.width, self.height = width, height
         self.cell_count = 0
