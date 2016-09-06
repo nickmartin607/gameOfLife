@@ -49,7 +49,7 @@ class Grid():
         self.width, self.height = width, height
         self.cell_count = 0
         self.generations = 0
-        self.grid = [[0 for x in xrange(width)] for y in xrange(height)]
+        self.grid = [[0 for _ in xrange(width)] for _ in xrange(height)]
         self.old_grid = []
 
         for x, y in coordinates:
@@ -174,9 +174,6 @@ if __name__ == '__main__':
 
     # Read arguments from command line
     args = parser.parse_args()
-
-    print(args)
-
     
     # Verify specified starting number of cells dont exceed board capacity
     if args.cells > args.dim**2:
