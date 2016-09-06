@@ -172,7 +172,5 @@ def parse_arguments():
     return args
 
 if __name__ == '__main__':
-    
-    arguments = parse_arguments()
-    main(arguments)
+    main(parse_arguments())
     
