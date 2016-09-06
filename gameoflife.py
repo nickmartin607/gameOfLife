@@ -114,9 +114,8 @@ class Grid(object):
 
 def main(args):
     if args.setup:
-        width = INITIAL_SETUPS[args.setup]['width']
-        height = INITIAL_SETUPS[args.setup]['height']
-        coordinates = INITIAL_SETUPS[args.setup]['coordinates']
+        setup = INITIAL_SETUPS[args.setup]
+        grid = Grid(setup['width'], setup['height'], setup['coordinates'])
     else:
         if args.coordinates:
             coordinates = [[int(i) for i in pair.split(',')] for pair in args.coordinates]
@@ -126,22 +125,16 @@ def main(args):
                 x, y = randint(0, args.dim - 1), randint(0, args.dim - 1)
                 if (x, y) not in coordinates:
                     coordinates.append((x, y))
-        width = args.dim
-        height = args.dim
-    
-    # Generate Grid object
-    grid = Grid(width, height, coordinates)
+        grid = Grid(args.dim, args.dim, coordinates)
 
     # Perform generations on the board
     results = []
     while grid.generations <= args.rounds and grid.cell_count:
-        generation_display = grid.new_generation()
-        results.append(generation_display)
+        results.append(grid.new_generation())
 
     # Print final game results
     display = ''
-    terminal_width = int(check_output(['tput', 'cols']))
-    display_cols = terminal_width / (grid.width + 2 + SPACE_BETWEEN_BOARDS)
+    display_cols = int(check_output(['tput', 'cols'])) / (grid.width + 2 + SPACE_BETWEEN_BOARDS)
     for row in [results[i:i + display_cols] for i in xrange(0, grid.generations, display_cols)]:
         display += '\n'
         for board_row in xrange(grid.height + 2 + 1):
