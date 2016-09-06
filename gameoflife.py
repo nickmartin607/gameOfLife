@@ -5,11 +5,9 @@
 # Nick Martin (njm5722)
 # Authentication & Security Models, RIT Fall 2016
 
-from math import ceil
 from subprocess import check_output
 from random import randint
-from argparse import ArgumentParser, ArgumentTypeError
-from pprint import pprint
+from argparse import ArgumentParser
 
 SPACE_BETWEEN_BOARDS = 14
 NEIGHBORS = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
@@ -59,8 +57,8 @@ class Grid():
 
     # Get the value of a cell, current grid by default
     def get_cell(self, x, y, old=False):
-        g = self.old_grid if old else self.grid
-        return g[y][x]
+        grid = self.old_grid if old else self.grid
+        return grid[y][x]
 
         # Mark a cell as 'Alive'
     def fill_cell(self, x, y):
@@ -182,6 +180,6 @@ def parse_arguments():
 
 if __name__ == '__main__':
     
-    args = parse_arguments()
-    main(args)
+    arguments = parse_arguments()
+    main(arguments)
     
