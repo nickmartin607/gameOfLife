@@ -9,7 +9,10 @@ from math import ceil
 from subprocess import check_output
 from random import randint
 from argparse import ArgumentParser, ArgumentTypeError
+from pprint import pprint
 
+SPACE_BETWEEN_BOARDS = 14
+NEIGHBORS = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
 INITIAL_SETUPS = {
     'blinker': {
         'width': 5,
@@ -51,7 +54,6 @@ class Grid():
         self.generations = 0
         self.grid = [[0 for _ in xrange(width)] for _ in xrange(height)]
         self.old_grid = []
-
         for x, y in coordinates:
             self.fill_cell(x, y)
 
@@ -73,10 +75,9 @@ class Grid():
         self.grid[y][x] = 0
 
     # Total up neighbors for a given cell
-    def regenerate(self, x, y):
-        neighbors = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
+    def update_cell(self, x, y):
         count = 0
-        for X, Y in neighbors:
+        for X, Y in NEIGHBORS:
             if 0 <= x + X < self.width and 0 <= y + Y < self.height:
                 if self.get_cell(x + X, y + Y, old=True):
                     count += 1
@@ -87,78 +88,69 @@ class Grid():
             self.fill_cell(x, y)
         else:
             self.clear_cell(x, y)
-
-  
-class Board():
-    def __init__(self, width, height):
-        self.width, self.height = width + 2, height + 2
-        self.term_width = int(check_output(['tput', 'cols']))
-        self.display_space = 6
-        self.horiz_bar = '+{}+'.format('-' * width)
-
-    # Build 2D List represnting board display
-    def build_board(self, grid):
+            
+    # Update board for a new generation
+    def new_generation(self):
+        display = self.build_board()
+        
+        self.old_grid = [row[:] for row in self.grid]
+        self.generations += 1
+        for x in xrange(self.width):
+            for y in xrange(self.height):
+                self.update_cell(x, y)
+        return display
+            
+        
+    def build_board(self):
+        horiz_bar = '+{}+'.format('-' * self.width)
         display = []
-        display.append(
-            '{:^{w}}'.format("Gen #{}".format(grid.generations), w=self.width))
-        display.append(self.horiz_bar)
-        for y in xrange(grid.height):
+        display.append('{:^{w}}'.format("Gen #{}".format(self.generations), w=self.width + 2))
+        display.append(horiz_bar)
+        for y in xrange(self.height):
             row = []
-            for x in xrange(grid.width):
-                row.append('#' if grid.get_cell(x, y) else ' ')
+            for x in xrange(self.width):
+                row.append('#' if self.get_cell(x, y) else ' ')
             display.append('|{}|'.format(''.join(row)))
-        display.append(self.horiz_bar)
+        display.append(horiz_bar)
         return display
 
-    # Build string representing entire game
-    def build_display(self, results):
-        display = ''
-
-        cols = self.term_width / (self.width + self.display_space)
-        rows = int(ceil(len(results) / float(cols)))
-        for row in [results[i:i + cols] for i in xrange(0, len(results), cols)]:
-            display += '\n'
-            for board_row in xrange(self.height + 1):
-                display += '{}\n'.format(
-                    str(' ' * self.display_space).join(
-                        [row[gen][board_row] for gen in xrange(len(row))]))
-        return display
+def main(args):
+    if args.setup:
+        width = INITIAL_SETUPS[args.setup]['width']
+        height = INITIAL_SETUPS[args.setup]['height']
+        coordinates = INITIAL_SETUPS[args.setup]['coordinates']
+    else:
+        if args.coordinates:
+            coordinates = [[int(i) for i in pair.split(',')] for pair in args.coordinates]
+        else:   # Random Configuration
+            coordinates = []
+            while len(coordinates) < args.cells:
+                x, y = randint(0, args.dim - 1), randint(0, args.dim - 1)
+                if (x, y) not in coordinates:
+                    coordinates.append((x, y))
+        width = args.dim
+        height = args.dim
     
-  
-  
-def main(setup):
-    # Generate Grid and Board objects
-    g = Grid(setup['width'], setup['height'], setup['coordinates'])
-    b = Board(setup['width'], setup['height'])
+    # Generate Grid object
+    grid = Grid(width, height, coordinates)
 
     # Perform generations on the board
     results = []
-    while g.generations <= args.rounds and g.cell_count:
-        # Build grid display and add to output
-        results.append(b.build_board(g))
-
-        # Increment generation counter, and create duplicate board to reference
-        g.generations += 1
-        g.old_grid = [row[:] for row in g.grid]
-
-        # Loop over each cell in the board
-        for x in xrange(g.width):
-            for y in xrange(g.height):
-                g.regenerate(x, y)
+    while grid.generations <= args.rounds and grid.cell_count:
+        generation_display = grid.new_generation()
+        results.append(generation_display)
 
     # Print final game results
-    print b.build_display(results)
+    display = ''
+    terminal_width = int(check_output(['tput', 'cols']))
+    display_cols = terminal_width / (grid.width + 2 + SPACE_BETWEEN_BOARDS)
+    for row in [results[i:i + display_cols] for i in xrange(0, grid.generations, display_cols)]:
+        display += '\n'
+        for board_row in xrange(grid.height + 2 + 1):
+            display += '{}\n'.format(str(' ' * SPACE_BETWEEN_BOARDS).join([row[gen][board_row] for gen in xrange(len(row))]))
+    print display
 
-# Coordinate type specification for coordinate arguments
-def coordinate(c):
-    try:
-        return c.split(',')
-        # x, y = map(int, c.split(','))
-        # return x, y
-    except:
-        raise ArgumentTypeError("Coordinates must be (x,y)")
-
-if __name__ == '__main__':
+def parse_arguments():
     parser = ArgumentParser(usage='%(prog)s [options]', description="Conway's Game of Life")
 
     # Arguments for initial board setups
@@ -172,28 +164,24 @@ if __name__ == '__main__':
     specs.add_argument('-c', '--cells', type=int, default=20, metavar="#", help="Number of default active cells")
     specs.add_argument('-r', '--rounds', type=int, default=10, metavar="#", help="Number of generations to run for")
 
-    # Read arguments from command line
     args = parser.parse_args()
-    
+
     # Verify specified starting number of cells dont exceed board capacity
     if args.cells > args.dim**2:
         parser.error("Number of initial cells exceeds maximum board capacity")
 
-    if args.setup:
-        main(INITIAL_SETUPS[args.setup])
-    else:
-        if args.coordinates:
-            coordinates = []
-            for coordinate_pair in args.coordinates:
-                print coordinate_pair
-                x, y = coordinate_pair.split(',')
-                coordinates.append((int(x), int(y)))
-                if int(x) >= args.dim or int(y) >= args.dim:
-                    parser.error("Coordinates out of range of board dimensions")
-        else:   # Random Configuration
-            coordinates = []
-            while len(coordinates) < args.cells:
-                x, y = randint(0, args.dim - 1), randint(0, args.dim - 1)
-                if (x, y) not in coordinates:
-                    coordinates.append((x, y))
-        main({'width': args.dim, 'height': args.dim, 'coordinates': coordinates})
+    # Verify coordinates, if given, are within board dimensions
+    if args.coordinates:
+        for pair in args.coordinates:
+            x, y = pair.split(',')
+            if int(x) >= args.dim or int(y) >= args.dim:
+                parser.error("Coordinates out of range of board dimensions")
+    
+    # Read arguments from command line
+    return args
+
+if __name__ == '__main__':
+    
+    args = parse_arguments()
+    main(args)
+    
