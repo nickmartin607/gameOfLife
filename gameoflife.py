@@ -5,7 +5,6 @@
 # Nick Martin (njm5722)
 # Authentication & Security Models, RIT Fall 2016
 
-from pprint import pprint
 from math import ceil
 from subprocess import check_output
 from random import randint
@@ -13,34 +12,22 @@ from argparse import ArgumentParser, ArgumentTypeError
 
 INITIAL_SETUPS = {
     'blinker': {
-        'width': 5, 'height': 5, 'coordinates': [(2,1),(2,2),(2,3)]
+        'width': 5, 'height': 5, 'coordinates': [(2,1), (2,2), (2,3)]
     },
     'glider': {
-        'width': 10, 'height': 10, 'coordinates': [
-            (1,3),(2,3),(3,3),(3,2),(2,1)
-        ]
+        'width': 10, 'height': 10, 'coordinates': [(1,3), (2,3), (3,3), (3,2), (2,1)]
     },
     'toad': {
-        'width': 6, 'height': 6, 'coordinates': [
-            (1,3),(2,3),(3,3),(2,2),(3,2),(4,2)
-        ]
+        'width': 6, 'height': 6, 'coordinates': [(1,3), (2,3), (3,3), (2,2), (3,2), (4,2)]
     },
     'lwss': {
-        'width': 20, 'height': 5, 'coordinates': [
-            (0,0),(0,2),(3,0),(4,1),(4,2),(4,3),(3,3),(2,3),(1,3)
-        ]
+        'width': 20, 'height': 5, 'coordinates': [(0,0), (0,2), (3,0), (4,1), (4,2), (4,3), (3,3), (2,3), (1,3)]
     },
     'exploder': {
-        'width': 15, 'height': 15, 'coordinates': [
-            (5,5),(5,6),(5,7),(5,8),(5,9),(9,5),
-            (9,6),(9,7),(9,8),(9,9),(7,5),(7,9)
-        ]
+        'width': 15, 'height': 15, 'coordinates': [(5,5), (5,6), (5,7), (5,8), (5,9), (9,5), (9,6), (9,7), (9,8), (9,9), (7,5), (7,9)]
     },
     'tumbler': {
-        'width': 11, 'height': 9, 'coordinates': [
-            (1,3),(1,2),(2,1),(3,2),(4,3),(3,4),(3,5),(4,5),
-            (6,5),(7,5),(7,4),(6,3),(7,2),(8,1),(9,2),(9,3)
-        ]
+        'width': 11, 'height': 9, 'coordinates': [(1,3), (1,2), (2,1), (3,2), (4,3), (3,4), (3,5), (4,5), (6,5), (7,5), (7,4), (6,3), (7,2), (8,1), (9,2), (9,3)]
     }
 }
 
@@ -74,7 +61,7 @@ class Grid():
         
     # Total up neighbors for a given cell
     def regenerate(self, x, y):
-        neighbors = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
+        neighbors = [(-1,-1), (-1,0), (-1,1), (0,-1), (0,1), (1,-1), (1,0), (1,1)]
         count = 0
         for X, Y in neighbors:
             if 0 <= x + X < self.width and 0 <= y + Y < self.height:
@@ -92,7 +79,7 @@ class Grid():
 class Board():
     def __init__(self, width, height):
         self.width, self.height = width + 2, height + 2
-        self.term_width = int(check_output(['tput','cols']))
+        self.term_width = int(check_output(['tput', 'cols']))
         self.display_space = 6
         self.horiz_bar = '+{}+'.format('-' * width)
         
@@ -147,7 +134,7 @@ def main(setup):
                 g.regenerate(x, y)
                 
     # Print final game results
-    print(b.build_display(results))
+    print b.build_display(results)
 
 # Coordinate type specification for coordinate arguments
 def coordinate(c):
@@ -159,31 +146,25 @@ def coordinate(c):
 
 
 if __name__ == '__main__':
-    parser = ArgumentParser(usage='%(prog)s [options]',
-        description="Conway's Game of Life")
+    parser = ArgumentParser(usage='%(prog)s [options]', description="Conway's Game of Life")
     
     # Arguments for initial board setups
     setup = parser.add_argument_group("Optional Game Initial Setup Options")
-    setup.add_argument('--initial', dest='setup',
-        choices=INITIAL_SETUPS.keys(), help="Initial configuration")
-    setup.add_argument('--coordinates', type=coordinate,
-        nargs='+', help="Specific coordinates for custom initial setup")
+    setup.add_argument('--initial', dest='setup', choices=INITIAL_SETUPS.keys(), help="Initial configuration")
+    setup.add_argument('--coordinates', type=coordinate, nargs='+', help="Specific coordinates for custom initial setup")
     
     # Arguments for game specifications
     specs = parser.add_argument_group("Optional Game Specification")
-    specs.add_argument('-d', '--dimension', dest='dim', type=int, default=10,
-        metavar="#", help="Dimension of the boards width and height")
-    specs.add_argument('-c', '--cells', type=int, default=20, metavar="#",
-        help="Number of default active cells")
-    specs.add_argument('-r', '--rounds', type=int, default=10, metavar="#",
-        help="Number of generations to run for")
+    specs.add_argument('-d', '--dimension', dest='dim', type=int, default=10, metavar="#", help="Dimension of the boards width and height")
+    specs.add_argument('-c', '--cells', type=int, default=20, metavar="#", help="Number of default active cells")
+    specs.add_argument('-r', '--rounds', type=int, default=10, metavar="#", help="Number of generations to run for")
     
     # Read arguments from command line
     args = parser.parse_args()
     
     # Verify custom coordinates dont exceed board dimensions
     if args.coordinates:
-        for x,y in args.coordinates:
+        for x, y in args.coordinates:
             if x >= args.dim or y >= args.dim:
                 parser.error("Coordinates out of range of board dimensions")
                 
@@ -202,9 +183,6 @@ if __name__ == '__main__':
                 x, y = randint(0, args.dim - 1), randint(0, args.dim - 1)
                 if (x, y) not in coordinates:
                     coordinates.append((x, y))
-        setup = {
-            'width': args.dim, 'height': args.dim,
-            'coordinates': coordinates
-        }
+        setup = {'width': args.dim, 'height': args.dim, 'coordinates': coordinates}
     
     main(setup)
