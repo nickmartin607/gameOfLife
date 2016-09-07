@@ -5,11 +5,10 @@
 # Nick Martin (njm5722)
 # Authentication & Security Models, RIT Fall 2016
 
-from itertools import product
-from subprocess import check_output
-from random import randint
 from argparse import ArgumentParser
-from pprint import pprint
+from itertools import product
+from random import randint
+from subprocess import check_output
 
 SPACE_BETWEEN_BOARDS = 3
 INITIAL_SETUPS = {
