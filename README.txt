@@ -1,4 +1,4 @@
-usage: gameOfLife.py [options]
+usage: gameoflife.py [options]
 
 Conway's Game of Life
 
@@ -8,7 +8,7 @@ optional arguments:
 Optional Game Initial Setup Options:
   --initial {blinker,toad,lwss,tumbler,glider,exploder}
                         Initial configuration
-  --coordinates COORDINATES [COORDINATES ...]
+  --coordinates (X,Y) [(X,Y) ...]
                         Specific coordinates for custom initial setup
 
 Optional Game Specification:
